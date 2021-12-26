@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"runtime"
 	"sync"
 	"time"
 )
