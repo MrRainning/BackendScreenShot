@@ -71,7 +71,7 @@ func (l *EasyLog) formatMsg(msg ...interface{}) string {
 	return time.Now().Format(time.RFC3339) + str + "\n"
 }
 
-func (l *EasyLog) Clean() {
+func (l *EasyLog) Flush() {
 	l.writter.Flush()
 }
 
@@ -87,6 +87,11 @@ func Log() *EasyLog {
 			level:   EasyLogDebug,
 			writter: bufio.NewWriter(file),
 		}
+		go func() {
+			for _ = range time.Tick(time.Second * 10) {
+				log.Flush()
+			}
+		}()
 	})
 	return log
 }
