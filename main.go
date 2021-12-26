@@ -1,37 +1,67 @@
 package main
 
 import (
+	"BackendScreenShot/utils"
 	"context"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"strconv"
 
 	"github.com/chromedp/chromedp"
 )
+
+// TODO
+// IP限流、频控
+// 支持指定页面大小和质量
+// 超时控制
+// 异步api
 
 var chromeContext context.Context
 
 func main() {
 	StartBrowser()
 	http.HandleFunc("/screenshot", func(rw http.ResponseWriter, r *http.Request) {
-		urlStr := r.URL.Query().Get("url")
-		fmt.Println("url==", urlStr)
+		// get request params
+		values := r.URL.Query()
+		urlStr := values.Get("url")
+		widthStr := values.Get("width")
+		heightStr := values.Get("height")
+		width, _ := strconv.Atoi(widthStr)
+		if width == 0 {
+			width = 1280
+		}
+		height, _ := strconv.Atoi(heightStr)
+		if height == 0 {
+			height = 720
+		}
+
+		// result store here
 		var buf []byte
+
+		// define action
+		// set page size
+		viewPortAction := chromedp.EmulateViewport(int64(width), int64(height))
+		// open page
 		nevigateAction := chromedp.Navigate(urlStr)
-		viewPortAction := chromedp.EmulateViewport(1280, 720)
+		// do screenShot
 		shotAction := chromedp.CaptureScreenshot(&buf)
-		//	closeAction := chromedp.
-		chromedp.Run(chromeContext, viewPortAction, nevigateAction, shotAction)
-		_, err := rw.Write(buf)
+
+		// do actions
+		err := chromedp.Run(chromeContext, viewPortAction, nevigateAction, shotAction)
 		if err != nil {
-			fmt.Println("Err:", err)
+			utils.Log().Error(err)
+		}
+		// write resp
+		_, err = rw.Write(buf)
+		if err != nil {
+			utils.Log().Error("Err:", err)
 		}
 		rw.WriteHeader(http.StatusOK)
-		fmt.Println("this is base64")
-		fmt.Println(base64.StdEncoding.EncodeToString(buf))
+		utils.Log().Debug("this is base64")
+		utils.Log().Debug(base64.StdEncoding.EncodeToString(buf))
 	})
-	fmt.Println("Server start ...")
+	utils.Log().Info("Server start ...")
 	http.ListenAndServe(":8080", nil)
 
 }

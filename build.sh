@@ -1,0 +1,1 @@
+go build -o=BackendScreenShot main.go
