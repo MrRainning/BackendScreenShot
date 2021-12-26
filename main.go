@@ -19,9 +19,10 @@ func main() {
 		fmt.Println("url==", urlStr)
 		var buf []byte
 		nevigateAction := chromedp.Navigate(urlStr)
-		shotAction := chromedp.FullScreenshot(&buf, 80)
+		viewPortAction := chromedp.EmulateViewport(1280, 720)
+		shotAction := chromedp.CaptureScreenshot(&buf)
 		//	closeAction := chromedp.
-		chromedp.Run(chromeContext, nevigateAction, shotAction)
+		chromedp.Run(chromeContext, viewPortAction, nevigateAction, shotAction)
 		_, err := rw.Write(buf)
 		if err != nil {
 			fmt.Println("Err:", err)
